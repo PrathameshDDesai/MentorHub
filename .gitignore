@@ -1,0 +1,8 @@
+# System and temp files
+.DS_Store
+Thumbs.db
+
+# Dependencies
+node_modules/
+.env.local
+service-account.json

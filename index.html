@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mentor Management System - Firebase</title>
+    <!-- External CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- 1. Navigation Bar with Google Auth -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <span class="logo-icon">🎓</span> MentorHub
+            </div>
+            
+            <ul class="nav-links">
+                <li><a href="#" class="active">Dashboard</a></li>
+                <li><a href="#mentorListSection">Mentors</a></li>
+                <li><a href="#addMentorSection">Add Mentor</a></li>
+            </ul>
+
+            <!-- Auth Section -->
+            <div class="nav-auth">
+                <button type="button" id="googleLoginBtn" class="btn btn-google">
+                    <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/></svg>
+                    Sign in with Google
+                </button>
+                
+                <div id="userProfile" class="user-profile" hidden>
+                    <img id="userAvatar" src="" alt="User" class="user-avatar">
+                    <span id="userName" class="user-name"></span>
+                    <button type="button" id="logoutBtn" class="btn btn-secondary btn-sm">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="main-container">
+
+        <!-- Notification Banner -->
+        <div id="notificationBanner" class="notification-banner" hidden>
+            <span id="notificationMessage"></span>
+            <button type="button" class="close-banner" id="closeNotificationBtn">&times;</button>
+        </div>
+
+        <!-- Auth Status Notice (when logged out) -->
+        <div id="authNotice" class="auth-notice">
+            <p>🔒 <strong>Please sign in with Google</strong> to add, edit, or delete mentor records in Firebase Firestore.</p>
+        </div>
+
+        <!-- 2. Add Mentor Form Section -->
+        <section id="addMentorSection" class="card-section">
+            <h2>➕ Add New Mentor</h2>
+            <form id="addMentorForm" novalidate>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="mentorName">Mentor Name <span class="required">*</span></label>
+                        <input type="text" id="mentorName" name="mentorName" placeholder="e.g. Dr. John Doe">
+                        <span id="mentorNameError" class="error-message"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="employeeId">Employee ID <span class="required">*</span></label>
+                        <input type="text" id="employeeId" name="employeeId" placeholder="e.g. EMP101">
+                        <span id="employeeIdError" class="error-message"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="department">Department <span class="required">*</span></label>
+                        <select id="department" name="department">
+                            <option value="">-- Select Department --</option>
+                            <option value="Computer Engineering">Computer Engineering</option>
+                            <option value="Information Technology">Information Technology</option>
+                            <option value="Electronics & Telecommunication">Electronics & Telecommunication</option>
+                            <option value="Mechanical Engineering">Mechanical Engineering</option>
+                            <option value="Civil Engineering">Civil Engineering</option>
+                        </select>
+                        <span id="departmentError" class="error-message"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="designation">Designation <span class="required">*</span></label>
+                        <input type="text" id="designation" name="designation" placeholder="e.g. Professor">
+                        <span id="designationError" class="error-message"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="maxMentees">Maximum Mentees Allowed <span class="required">*</span></label>
+                        <input type="number" id="maxMentees" name="maxMentees" placeholder="e.g. 5" min="1">
+                        <span id="maxMenteesError" class="error-message"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="profilePhoto">Profile Photo (JPG / PNG) <span class="required">*</span></label>
+                        <input type="file" id="profilePhoto" name="profilePhoto" accept=".jpg,.jpeg,.png,image/jpeg,image/png">
+                        <span id="profilePhotoError" class="error-message"></span>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" id="submitBtn" class="btn btn-primary" disabled>Submit Mentor</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- 3. List Table Section -->
+        <section id="mentorListSection" class="card-section">
+            <div class="section-header">
+                <h2>📋 Registered Mentors (Firebase Firestore)</h2>
+                <button type="button" class="btn btn-export" id="exportCsvBtn">📥 Export to .CSV</button>
+            </div>
+            <div class="table-responsive">
+                <table id="mentorTable">
+                    <thead>
+                        <tr>
+                            <th>Photo</th>
+                            <th>Name</th>
+                            <th>Employee ID</th>
+                            <th>Department</th>
+                            <th>Designation</th>
+                            <th>Max Mentees</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mentorTableBody">
+                        <!-- Loaded dynamically from Firebase Firestore -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- 4. Edit Modal Popup -->
+    <div id="editModalOverlay" class="modal-overlay" hidden>
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>✏️ Edit Mentor Details</h3>
+                <button type="button" class="modal-close-btn" id="closeEditModalBtn">&times;</button>
+            </div>
+            
+            <form id="editMentorForm" novalidate>
+                <div class="modal-body">
+                    <!-- Firebase Document ID -->
+                    <input type="hidden" id="editDocId">
+                    
+                    <div class="form-group">
+                        <label for="editMentorName">Mentor Name <span class="required">*</span></label>
+                        <input type="text" id="editMentorName" name="editMentorName">
+                        <span id="editMentorNameError" class="error-message"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editEmployeeId">Employee ID <span class="required">*</span></label>
+                        <input type="text" id="editEmployeeId" name="editEmployeeId">
+                        <span id="editEmployeeIdError" class="error-message"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editDepartment">Department <span class="required">*</span></label>
+                        <select id="editDepartment" name="editDepartment">
+                            <option value="">-- Select Department --</option>
+                            <option value="Computer Engineering">Computer Engineering</option>
+                            <option value="Information Technology">Information Technology</option>
+                            <option value="Electronics & Telecommunication">Electronics & Telecommunication</option>
+                            <option value="Mechanical Engineering">Mechanical Engineering</option>
+                            <option value="Civil Engineering">Civil Engineering</option>
+                        </select>
+                        <span id="editDepartmentError" class="error-message"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editDesignation">Designation <span class="required">*</span></label>
+                        <input type="text" id="editDesignation" name="editDesignation">
+                        <span id="editDesignationError" class="error-message"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editMaxMentees">Maximum Mentees Allowed <span class="required">*</span></label>
+                        <input type="number" id="editMaxMentees" name="editMaxMentees" min="1">
+                        <span id="editMaxMenteesError" class="error-message"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editProfilePhoto">Profile Photo (Leave blank to keep existing):</label>
+                        <input type="file" id="editProfilePhoto" name="editProfilePhoto" accept=".jpg,.jpeg,.png,image/jpeg,image/png">
+                        <span id="editProfilePhotoError" class="error-message"></span>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancelEditBtn">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="saveEditBtn">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 5. Delete Confirmation Modal Popup -->
+    <div id="deleteModalOverlay" class="modal-overlay" hidden>
+        <div class="modal-card modal-delete">
+            <div class="modal-header">
+                <h3>🗑️ Confirm Deletion</h3>
+                <button type="button" class="modal-close-btn" id="closeDeleteModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this mentor from Firebase?</p>
+                <p class="delete-warning-text">This will permanently remove the record from Firestore.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelDeleteBtn">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Yes, Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase JS Module -->
+    <script type="module" src="script.js"></script>
+</body>
+</html>
